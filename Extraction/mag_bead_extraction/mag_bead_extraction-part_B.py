@@ -24,10 +24,10 @@ if test_run:
     # Limit columns
     cols = ['A1']
 else:
-    pause_eth_bind = 5*60
-    pause_aq_bind = 10*60
-    pause_dry = 20*60
-    pause_elute = 7*60
+    pause_eth_bind = 10*60
+    pause_aq_bind = 15*60
+   # pause_dry = 5*60 #manual pause to make sure everything is really dry
+    pause_elute = 5*60
 
     # Limit columns
     cols = ['A1']
@@ -37,7 +37,7 @@ else:
 
 # Lysate transfer volume
 
-lysate_vol = 425
+lysate_vol = 900
 
 wash_vol = 290
 
@@ -55,7 +55,7 @@ hyb_well_vol = 40000
 
 # define magnet engagement height for plates
 # (none if using labware with built-in specs)
-mag_engage_height = 11
+mag_engage_height = 9
 
 
 # REAGENTS plate:
@@ -121,11 +121,11 @@ def run(protocol: protocol_api.ProtocolContext):
     wash = protocol.load_labware('brand_6_reservoir_40000ul',
                                      1, 'wash buffers')
 
-    samples = protocol.load_labware('brand_96_wellplate_1200ul',
+    samples = protocol.load_labware('thermoscientificnunc_96_wellplate_2000ul',
                                      3, 'samples')
     # load plate on magdeck
     # mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
-    mag_plate = magblock.load_labware('brand_96_wellplate_1200ul')
+    mag_plate = magblock.load_labware('thermoscientificnunc_96_wellplate_2000ul')
 
     # initialize pipettes
     pipette_left = protocol.load_instrument('p300_multi_gen2',
@@ -284,10 +284,10 @@ def run(protocol: protocol_api.ProtocolContext):
                                        drop_super_tip=False,
                                        rate=1,
                                        vol_fn=vol_fn,
-                                       mix_n=wash_mix,
+                                       mix_n=wash_mix*2,
                                        mix_vol=290,
                                        mix_lift=0,
-                                       mix_rate=mix_rate,
+                                       mix_rate=mix_rate*2,
                                        remaining=None,
                                        mag_engage_height=mag_engage_height,
                                        pause_s=pause_eth_bind)
@@ -324,10 +324,10 @@ def run(protocol: protocol_api.ProtocolContext):
                                        drop_super_tip=False,
                                        rate=1,
                                        vol_fn=vol_fn,
-                                       mix_n=wash_mix,
+                                       mix_n=wash_mix*2,
                                        mix_vol=290,
                                        mix_lift=0,
-                                       mix_rate=mix_rate,
+                                       mix_rate=mix_rate*2,
                                        remaining=eth_remaining,
                                        mag_engage_height=mag_engage_height,
                                        pause_s=pause_eth_bind)
@@ -354,11 +354,30 @@ def run(protocol: protocol_api.ProtocolContext):
                        super_vol=wash_vol,
                        tip_vol=300,
                        rate=bead_flow,
+                       bottom_offset=.5,
+                       drop_tip=False)
+                       
+                       # remove supernatant
+    remove_supernatant(pipette_left,
+                       mag_plate,
+                       cols,
+                       tiprack_wash2,
+                       waste['A1'],
+                       super_vol=wash_vol,
+                       tip_vol=300,
+                       rate=bead_flow,
                        bottom_offset=.2,
                        drop_tip=True)
 
     # dry
-    protocol.delay(seconds=pause_dry)
+   # protocol.delay(seconds=pause_dry)
+    
+    ### Prompt user to manually check if all ethanol has been removed
+    protocol.pause( 'Check if all Ethanol has been successfull removed - '
+                    'if not, remove by hand')
+                    
+    protocol.comment('Drying - resume manually (20 min or when dry)')
+
 
     # ### Elute
     protocol.comment('Eluting DNA from beads.')
