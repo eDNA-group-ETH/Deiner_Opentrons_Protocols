@@ -30,7 +30,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # define deck positions and labware
 
     # tips
-    tiprack_a = protocol.load_labware('opentrons_96_filtertiprack_200ul', 6)
+    tiprack_a = protocol.load_labware('opentrons_96_filtertiprack_1000ul', 6)
     # tube racks, named for deck position
     tuberack_4 = protocol.load_labware(tuberack_labware, 4)
     tuberack_1 = protocol.load_labware(tuberack_labware, 1)
@@ -38,12 +38,12 @@ def run(protocol: protocol_api.ProtocolContext):
     tuberack_2 = protocol.load_labware(tuberack_labware, 2)
 
     # plates
-    samples = protocol.load_labware('brand_96_wellplate_1200ul',
+    samples = protocol.load_labware('thermoscientificnunc_96_wellplate_2000ul',
                                     3, 'samples')
 
     # initialize pipettes
-    pipette = protocol.load_instrument('p300_single_gen2',
-                                       'left',
+    pipette = protocol.load_instrument('p1000_single_gen2',
+                                       'right',
                                        tip_racks=[tiprack_a])
 
     # # home instrument
@@ -101,7 +101,7 @@ def run(protocol: protocol_api.ProtocolContext):
                              destination.top(z=-3),
                              new_tip='never',
                              rate=rate,
-                             touch_tip=True,
+                             touch_tip=False,
                              air_gap=10,
                              trash=True)
 
