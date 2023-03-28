@@ -61,7 +61,7 @@ elute_mix_num = 2
 
 # fill volumes
 
-eth_well_vol = 40000
+eth_well_vol = 35000
 
 hyb_well_vol = 20000
 
@@ -74,13 +74,13 @@ mag_engage_height = 9
 # Bead columns 20 ml in each
 bead_cols = ['A3', 'A4','A5','A6']
 
+# Elute col
+elute_col = 'A1'
+
 # Elute and Wash plate:
 
 # Ethanol columns 40 ml in each
-eth_cols = ['A2','A3', 'A4', 'A5', 'A6']
-
-# Elute col
-elute_col = 'A1'
+eth_cols = ['A1','A2','A3', 'A4', 'A5', 'A6']
 
 
 # bead aspiration flow rate
@@ -480,7 +480,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # add elution buffer and mix
     for col in cols:
         pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
-        pipette_left.aspirate(elute_vol, wash[elute_col], rate=1)
+        pipette_left.aspirate(elute_vol, reagents[elute_col], rate=1)
         pipette_left.dispense(elute_vol, mag_plate[col].bottom(z=1))
         pipette_left.mix(elute_mix_num,
                          elute_vol - 10,
@@ -519,7 +519,23 @@ def run(protocol: protocol_api.ProtocolContext):
     magblock.engage(height_from_base=mag_engage_height)
 
     protocol.delay(seconds=pause_aq_bind)
-
+    
+    #wash tips in eluate while magnet enganged
+    
+     for col in cols:
+        pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
+        pipette_left.mix(2,
+                         elute_vol/2,
+                         mag_plate[col].bottom(z=3),
+                         rate=mix_rate/2)
+        pipette_left.blow_out(mag_plate[col].top())
+        pipette_left.touch_tip(speed = 30,
+                               radius = 0.5,
+                               v_offset = -6)
+        # we'll use these same tips for final transfer
+        pipette_left.return_tip()
+    
+     
     protocol.comment('Transferring eluted DNA to final plate.')
     
     for n in range(0, elut_plate):
