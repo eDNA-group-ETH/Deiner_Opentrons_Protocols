@@ -18,7 +18,7 @@ metadata = {'apiLevel': '2.8',
 
 # Set to `True` to perform a short run, with brief pauses and only
 # one column of samples
-test_run = False
+test_run = True
 
 if test_run:
     pause_eth_bind = 5
@@ -27,7 +27,7 @@ if test_run:
     pause_elute = 5
 
     # Limit columns
-    cols = ['A1', 'A2', 'A3', 'A4', 'A5']
+    cols = ['A1']
     
 else:
     pause_eth_bind = 10*60
@@ -54,8 +54,8 @@ elute_vol = 200 #total volume
 
 elut_plate = 3 #if elut_plate > 1 the volume is split equally on elut_plate plates (max 3)
 
-if elut_plate not in [1,2,3]:
-    raise Exception("you must have either one, two or three elution plates")
+if elut_plate not in [1,2,3,4]:
+    raise Exception("you must have either one, two, three or four elution plates")
 
 elute_mix_num = 2
 
@@ -72,7 +72,7 @@ mag_engage_height = 9
 
 # BEAD plate:
 # Bead columns 20 ml in each
-bead_cols = ['A3', 'A4','A5','A6']
+bead_cols = ['A3']
 
 # Elute col
 elute_col = 'A1'
@@ -109,12 +109,12 @@ def run(protocol: protocol_api.ProtocolContext):
     magblock.disengage()
 
     # tips
-    tiprack_buffers = protocol.load_labware('opentrons_96_tiprack_300ul',
+    tiprack_buffers = protocol.load_labware('opentrons_96_filtertiprack_200ul',
                                             1)
     tiprack_elution = protocol.load_labware(
-                            'opentrons_96_filtertiprack_200ul', 7)
-    tiprack_wash1 = protocol.load_labware('opentrons_96_tiprack_300ul',
-                                          4)
+                            'opentrons_96_filtertiprack_200ul', 4)
+    tiprack_wash1 = protocol.load_labware('opentrons_96_filtertiprack_200ul',
+                                          2)
     # tiprack_wash2 = protocol.load_labware('opentrons_96_tiprack_300ul',
                                           # 8)
     # tiprack_wash3 = protocol.load_labware('opentrons_96_tiprack_300ul',
@@ -134,18 +134,23 @@ def run(protocol: protocol_api.ProtocolContext):
     if elut_plate > 2:
         eluate3 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
                                    8, 'eluate1')
+    
+    if elut_plate > 3:
+        eluate3 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
+                                   7, 'eluate1')
                                    
     waste = protocol.load_labware('nest_1_reservoir_195ml',
                                   9, 'liquid waste')
     reagents = protocol.load_labware('brand_6_reservoir_40000ul',
-                                     2, 'reagents')
+                                     3, 'reagents')
     wash = protocol.load_labware('brand_6_reservoir_40000ul',
                                      5, 'wash buffers')
 
-    samples = protocol.load_labware('thermoscientificnunc_96_wellplate_2000ul',
-                                     3, 'samples')
+    # samples = protocol.load_labware('thermoscientificnunc_96_wellplate_2000ul',
+    #                                 3, 'samples')
     # load plate on magdeck
     # mag_plate = magblock.load_labware('vwr_96_wellplate_1000ul')
+    
     mag_plate = magblock.load_labware('thermoscientificnunc_96_wellplate_2000ul')
 
     # initialize pipettes
@@ -176,7 +181,7 @@ def run(protocol: protocol_api.ProtocolContext):
              None,
              n=6,
              z_offset=2,
-             mix_vol=300,
+             mix_vol=200,
              mix_lift=20,
              mix_rate=mix_rate,
              drop_tip=True)
@@ -185,10 +190,11 @@ def run(protocol: protocol_api.ProtocolContext):
    # add beads
     bead_remaining, bead_wells = add_buffer(pipette_left,
                                             bead_wells,
-                                            samples,
+                                            mag_plate,
                                             cols,
                                             hyb_vol,
                                             hyb_well_vol/8,
+                                            tip_vol = 200,
                                             protocol,
                                             pause_in_sec = 2,
                                             touch_tip_speed = 30,
@@ -204,12 +210,12 @@ def run(protocol: protocol_api.ProtocolContext):
             pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
         
             for n in range(0,2): 
-                pipette_left.aspirate(290,
-                                      samples.wells_by_name()[col].bottom(z=5),
+                pipette_left.aspirate(190,
+                                      mag_plate.wells_by_name()[col].bottom(z=5),
                                       rate = 0.5
                                      )
-                pipette_left.dispense(290,
-                                      samples.wells_by_name()[col].bottom(z=20),
+                pipette_left.dispense(190,
+                                      mag_plate.wells_by_name()[col].bottom(z=20),
                                       rate = 0.5)
                                       
             pipette_left.touch_tip(speed = 30,
@@ -226,38 +232,38 @@ def run(protocol: protocol_api.ProtocolContext):
                    # 'position 3.')
 
 
-    # add samples
+    # # add samples
     
-    subset_vol = (lysate_vol+hyb_vol-50)
+    subset_vol = (lysate_vol+hyb_vol)
 
-    # transfer to magnet
-    tip_vol=270 #for some reason it complains if we set the tip volume to 300
-    transfers = int(ceil(subset_vol / (tip_vol - 10)))
-    transfer_vol = subset_vol / transfers
+    # # transfer to magnet
+    # tip_vol=270 #for some reason it complains if we set the tip volume to 300
+    # transfers = int(ceil(subset_vol / (tip_vol - 10)))
+    # transfer_vol = subset_vol / transfers
 
-    for col in cols:
-        pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
+    # for col in cols:
+        # pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
         
-        for i in range(0, transfers):
+        # for i in range(0, transfers):
             
-            pipette_left.aspirate(transfer_vol, samples.wells_by_name()[col].bottom(z = 3))
+            # pipette_left.aspirate(transfer_vol, samples.wells_by_name()[col].bottom(z = 3))
 
-            pipette_left.air_gap(5)
+            # pipette_left.air_gap(5)
             
-            protocol.delay(seconds=1)
-            pipette_left.touch_tip(speed = 30,
-                                   radius = 0.5,
-                                   v_offset = -6)
+            # protocol.delay(seconds=1)
+            # pipette_left.touch_tip(speed = 30,
+                                   # radius = 0.5,
+                                   # v_offset = -6)
             
-            pipette_left.dispense(transfer_vol+10, mag_plate.wells_by_name()[col])
+            # pipette_left.dispense(transfer_vol+10, mag_plate.wells_by_name()[col])
             
-            pipette_left.air_gap(10)
+            # pipette_left.air_gap(10)
             
-            pipette_left.touch_tip(speed = 30,
-                                   radius = 0.5,
-                                   v_offset = -6)
+            # pipette_left.touch_tip(speed = 30,
+                                   # radius = 0.5,
+                                   # v_offset = -6)
                             
-        pipette_left.return_tip()
+        # pipette_left.return_tip()
     
 
     # bind to magnet
@@ -273,11 +279,11 @@ def run(protocol: protocol_api.ProtocolContext):
             pipette_left.pick_up_tip(tiprack_wash1.wells_by_name()[col])
         
             for n in range(0,2): 
-                pipette_left.aspirate(290,
+                pipette_left.aspirate(190,
                                       mag_plate.wells_by_name()[col].bottom(z=5),
                                       rate = 0.5
                                      )
-                pipette_left.dispense(290,
+                pipette_left.dispense(190,
                                       mag_plate.wells_by_name()[col].bottom(z=20),
                                       rate = 0.5)
                                       
@@ -298,7 +304,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        tiprack_wash1,
                        waste['A1'],
                        super_vol=subset_vol - 5,
-                       tip_vol=300,
+                       tip_vol_rs=200,
                        rate=bead_flow,
                        bottom_offset=3,
                        drop_tip=False)
@@ -312,12 +318,13 @@ def run(protocol: protocol_api.ProtocolContext):
                                           cols,
                                           rinse_vol,
                                           eth_well_vol/8,
+                                          tip_vol = 180,
                                           protocol,
-                                          tip_vol = 280,
                                           pause_in_sec = 0,
                                           touch_tip_speed = 50,
                                           touch_tip_radius = 0.75,
                                           touch_tip_v_offset = -3,
+                                          tip=None,
                                           touch_tip = False)
 
     remove_supernatant(pipette_left,
@@ -326,7 +333,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        tiprack_wash1,
                        waste['A1'],
                        super_vol=rinse_vol - wash_vol,
-                       tip_vol=300,
+                       tip_vol_rs=200,
                        rate=1,
                        bottom_offset=1,
                        drop_tip=False)
@@ -352,13 +359,13 @@ def run(protocol: protocol_api.ProtocolContext):
                                        # optional arguments,
                                        wash_vol=wash_vol,
                                        super_vol=wash_vol,
-                                       super_tip_vol=300,
+                                       super_tip_vol=200,
                                        super_blowout=True,
                                        drop_super_tip=False,
                                        rate=1,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix*2,
-                                       mix_vol=290,
+                                       mix_vol=190,
                                        mix_lift=0,
                                        mix_rate=mix_rate*2,
                                        remaining=eth_remaining,
@@ -392,13 +399,13 @@ def run(protocol: protocol_api.ProtocolContext):
                                        # optional arguments,
                                        wash_vol=wash_vol - 50,
                                        super_vol=wash_vol,
-                                       super_tip_vol=300,
+                                       super_tip_vol=200,
                                        super_blowout=True,
                                        drop_super_tip=False,
                                        rate=1,
                                        vol_fn=vol_fn,
                                        mix_n=wash_mix*2,
-                                       mix_vol=290,
+                                       mix_vol=190,
                                        mix_lift=0,
                                        mix_rate=mix_rate*2,
                                        remaining=eth_remaining,
@@ -425,7 +432,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        tiprack_wash1,
                        waste['A1'],
                        super_vol=wash_vol,
-                       tip_vol=300,
+                       tip_vol_rs=200,
                        rate=bead_flow,
                        bottom_offset=.5,
                        drop_tip=False)
@@ -437,7 +444,7 @@ def run(protocol: protocol_api.ProtocolContext):
                        tiprack_wash1,
                        waste['A1'],
                        super_vol=wash_vol,
-                       tip_vol=300,
+                       tip_vol_rs=200,
                        rate=bead_flow,
                        bottom_offset=.2,
                        drop_tip=True)
