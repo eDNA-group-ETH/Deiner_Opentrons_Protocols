@@ -518,11 +518,11 @@ def run(protocol: protocol_api.ProtocolContext):
 
     magblock.engage(height_from_base=mag_engage_height)
 
-    protocol.delay(seconds=pause_aq_bind)
+    protocol.delay(seconds=pause_aq_bind/4)
     
     #wash tips in eluate while magnet enganged
     
-     for col in cols:
+    for col in cols:
         pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
         pipette_left.mix(2,
                          elute_vol/2,
