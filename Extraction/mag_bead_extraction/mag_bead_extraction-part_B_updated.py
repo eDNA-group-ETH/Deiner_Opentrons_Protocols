@@ -2,6 +2,7 @@ import sys
 import os
 
 sys.path.append("/root/opentrons_functions/opentrons_functions")
+sys.path.append("/Users/fabian/Documents/01_Work/03_Docs/Opentron/opentrons_functions/opentrons_functions")
 sys.path.append(os.path.join('C:\\','Users','localadmin','Documents','GitHub','opentrons_functions','opentrons_functions'))
 
 from opentrons import protocol_api
@@ -194,14 +195,14 @@ def run(protocol: protocol_api.ProtocolContext):
                                             cols,
                                             hyb_vol,
                                             hyb_well_vol/8,
-                                            tip_vol = 200,
                                             protocol,
                                             pause_in_sec = 2,
                                             touch_tip_speed = 30,
                                             touch_tip_radius = 0.5,
                                             touch_tip_v_offset = -6,
+                                            tip_vol=200,
                                             touch_tip = True,
-                                            drop_tip=True)
+                                            drop_tip = True)
 
      # mix while binding
     for i in range(0, 2): 
@@ -318,12 +319,12 @@ def run(protocol: protocol_api.ProtocolContext):
                                           cols,
                                           rinse_vol,
                                           eth_well_vol/8,
-                                          tip_vol = 180,
                                           protocol,
                                           pause_in_sec = 0,
                                           touch_tip_speed = 50,
                                           touch_tip_radius = 0.75,
                                           touch_tip_v_offset = -3,
+										  tip_vol= 200,
                                           tip=None,
                                           touch_tip = False)
 
