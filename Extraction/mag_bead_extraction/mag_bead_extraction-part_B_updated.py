@@ -53,7 +53,7 @@ rinse_vol = 1.75*lysate_vol
 
 elute_vol = 200 #total volume
 
-elut_plate = 3 #if elut_plate > 1 the volume is split equally on elut_plate plates (max 3)
+elut_plate = 4 #if elut_plate > 1 the volume is split equally on elut_plate plates (max 3)
 
 if elut_plate not in [1,2,3,4]:
     raise Exception("you must have either one, two, three or four elution plates")
@@ -130,15 +130,15 @@ def run(protocol: protocol_api.ProtocolContext):
                                    
     if elut_plate > 1:
         eluate2 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
-                                  11, 'eluate1')
+                                  11, 'eluate2')
                                   
     if elut_plate > 2:
         eluate3 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
-                                   8, 'eluate1')
+                                   8, 'eluate3')
     
     if elut_plate > 3:
-        eluate3 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
-                                   7, 'eluate1')
+        eluate4 = protocol.load_labware('biorad_96_wellplate_200ul_pcr',
+                                   7, 'eluate4')
                                    
     waste = protocol.load_labware('nest_1_reservoir_195ml',
                                   9, 'liquid waste')
@@ -548,7 +548,7 @@ def run(protocol: protocol_api.ProtocolContext):
     
     for n in range(0, elut_plate):
         
-        plate_list = [eluate1,eluate2,eluate3]
+        plate_list = [eluate1,eluate2,eluate3,eluate4]
     
         for col in cols:
             pipette_left.pick_up_tip(tiprack_elution.wells_by_name()[col])
